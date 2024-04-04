@@ -141,6 +141,7 @@ void DLL<T>::remove(int index) {
 }
 template<typename T>
 T& DLL<T>::get(int index) const {
+
     if (index <0 || index >= size) {
         throw std::out_of_range("get(): Out of range");
     }
@@ -164,7 +165,7 @@ template<typename T>
 void DLL<T>::clear() {
     Node <T> * tmp1 = this->head;
     Node <T> * tmp2 = this->tail;
-    while (true) {
+    while (1) {
         if (tmp1 == tmp2) {
             if (!tmp1) return;
             delete tmp1;
@@ -215,7 +216,17 @@ void DLL<T>::print() const {
     }
     std::cout <<tmp->data;
 }
-
+template<typename T>
+void DLL<T>::rprint () {
+    Node<T> * tmp = tail;
+    for(int i = 0; i < size; i ++) {
+        if (i == size - 1) std::cout <<tmp->data;
+        else {
+            std::cout << tmp->data<<" ";
+            tmp = tmp->prev;
+        }
+    }
+}
 template<typename T>
 void DLL<T>::fprint (const char * s) {
     ofstream ofs (s);
@@ -279,12 +290,12 @@ void DLL<T>::Iterator::set (const T &e) {
     if (this->curr) {
         this->curr->data = e;
     }
-    else throw std::out_of_range("Segmentation fault!");
+    else throw std::out_of_range("Segmentation fault! Set");
 }
 template<typename T>
 T& DLL<T>::Iterator:: operator*() {
     if (this->curr == nullptr)
-        throw std::out_of_range("Segmentation fault!");
+        throw std::out_of_range("Segmentation fault! Dereference");
     return this->curr->data;
 }
 template<typename T>
@@ -294,7 +305,7 @@ bool DLL<T>::Iterator::operator != (const Iterator & iterator) {
 template<typename T>
 void DLL<T>::Iterator::remove () {
     if (this->curr == nullptr) {
-        throw std::out_of_range("Segmentation fault!");
+        throw std::out_of_range("Segmentation fault! Remove");
         return;
     }
     if (this->index == 0) {
@@ -311,7 +322,7 @@ void DLL<T>::Iterator::remove () {
 template<typename T>
 typename DLL<T>::Iterator DLL<T>::Iterator::operator++ () {
     if ((this->curr == nullptr) && (this->index == 0 ||this->index == this->pList->size)) {
-        throw std::out_of_range("Segmentation fault!");
+        throw std::out_of_range("Segmentation fault! Pre_fix");
     }
     else if (this->curr == nullptr && this->index == -1){
         this->curr = this->pList->head;
@@ -324,10 +335,10 @@ typename DLL<T>::Iterator DLL<T>::Iterator::operator++ () {
     return *this;
 }
 template<typename T>
-const typename DLL<T>::Iterator DLL<T>::Iterator:: operator++ (int) {
+typename DLL<T>::Iterator DLL<T>::Iterator:: operator++ (int) {
     Iterator res = *this;
     if ((this->curr == nullptr) && (this->index == 0 ||this->index == this->pList->size)) {
-        throw std::out_of_range("Segmentation fault!");
+        throw std::out_of_range("Segmentation fault! Post_fix");
     }
     else if (this->curr == nullptr && this->index == -1) {
         this->curr = this->pList->head;
@@ -336,6 +347,35 @@ const typename DLL<T>::Iterator DLL<T>::Iterator:: operator++ (int) {
     else {
         this->curr = this->curr->next;
         this->index++;
+    }
+    return res;
+}
+template<class T>
+typename DLL<T>::Iterator DLL<T>::Iterator::operator-- () { //prefix
+    if (this->curr == nullptr && (this->index == 0 || this->index == -1))
+        throw std::out_of_range("Segmentation fault! prefix(--) Index = -1 or Index = 0");
+    else if (this->curr == nullptr && this->index == this->pList->size) {
+        this->curr = this->pList->tail;
+        this->index--;
+    }
+    else {
+        this->curr = this->curr->prev;
+        this->index--;
+    }
+    return *this;
+}
+template<class T>
+typename DLL<T>::Iterator DLL<T>::Iterator::operator-- (int) { //prefix
+    Iterator res = *this;
+    if (this->curr == nullptr && (this->index == 0 || this->index == -1))
+        throw std::out_of_range("Segmentation fault! prefix(--) Index = -1 or Index = 0");
+    else if (this->curr == nullptr && this->index == this->pList->size) {
+        this->curr = this->pList->tail;
+        this->index--;
+    }
+    else {
+        this->curr = this->curr->prev;
+        this->index--;
     }
     return res;
 }
@@ -353,10 +393,10 @@ Dataset::Dataset() {
     this->col = 0;
 }
 Dataset::Dataset(DLL<DLL<int>*>* a, DLL<string>* b, int row, int col) {
-    this->data = a;
-    this->title = b;
-    this->row = row;
-    this->col = col;
+this->data = a;
+this->title = b;
+this->row = row;
+this->col = col;
 }
 Dataset::~Dataset() {
     clear();
@@ -489,19 +529,17 @@ void Dataset::printTail(int nRows, int nCols) const {
     }
 }
 void Dataset::getShape(int& nRows, int& nCols) const {
-    nRows = data->length();
-    if (data->length() != 0) {
-        nCols = data->get(0)->length();
-    }
-    else throw std::out_of_range("get(): Out of range");
+    nRows = this->row;
+    nCols = this->col;
 }
 void Dataset::columns() const {
     DLL<string>::Iterator strb = this->title->begin();
-    for (int i = 0; i < this->col-1; i++) {
-        cout <<*strb<<" ";
-        strb++;
+    for (int i = 0; i < this->col; i++) {
+        if (i == this->col-1) cout <<*strb <<endl;
+        else {
+            cout <<*strb<<" ";
+            strb++;}
     }
-    cout <<*strb;
 }
 bool Dataset::drop(int axis, int index, std::string columns) {
     if (axis < 0 || axis > 1) {
@@ -520,7 +558,7 @@ bool Dataset::drop(int axis, int index, std::string columns) {
         bool find = false;
         DLL<string>::Iterator strb = this->title->begin();
         for (;ind < this->col; ind++) {
-            if ((*strb) == columns) {
+            if (*strb == columns) {
                 find = true;
                 break;
             }
@@ -541,10 +579,8 @@ bool Dataset::drop(int axis, int index, std::string columns) {
 }
 Dataset Dataset::extract(int startRow, int endRow, int startCol, int endCol) const {
     Dataset res;
-    if (endRow == -1) endRow = this->row-1; // Gia thuyet col tu (0->198), theo index;
-    else endRow = min(endRow, this->row-1);
-    if (endCol == -1) endCol = this->col-1; // Gia thuyet col tu (0->784), theo index;
-    else endCol = min(endCol, this->col-1);
+    if (endRow == -1 || endRow > this->row-1) endRow = this->row-1; // Gia thuyet col tu (0->198), theo index;
+    if (endCol == -1 || endCol > this->col-1) endCol = this->col-1; // Gia thuyet col tu (0->784), theo index;
     DLL<string>::Iterator strb = this->title->begin();
     for (int i = startCol; i > 0; i--) {
         strb++;
@@ -586,100 +622,55 @@ void kNN::fit(const Dataset& X_train, const Dataset& y_train) {
     this->X_train = X_train;
     this->y_train = y_train;
 }
-void merge(double arr[], int idx [],int start, int middle, int end) {
-    int n1 = middle - start + 1; // Size of sub-array 1
-    int n2 = end - middle;      // Size of sub-array 2
-    auto* leftArr = new double[n1];
-    auto* rightArr = new double[n2];
-    int* leftArr1 = new int[n1];
-    int* rightArr1 = new int[n2];
-    // Copy data to temporary arrays
-    for (int i = 0; i < n1; i++) {
-        leftArr[i] = arr[start + i];
-        leftArr1[i] = idx[start + i];
-    }
-    for (int j = 0; j < n2; j++) {
-        rightArr[j] = arr[middle + 1 + j];
-        rightArr1[j] = idx[middle + 1 + j];
-    }
-    int i = 0, j = 0, mergedIndex = start;
-
-    while (i < n1 && j < n2) {
-        if (leftArr[i] <= rightArr[j]) {
-            arr[mergedIndex] = leftArr[i];
-            idx[mergedIndex] = leftArr1[i];
-            i++;
-        } else {
-            arr[mergedIndex] = rightArr[j];
-            idx[mergedIndex] = rightArr1[j];
-            j++;
-        }
-        mergedIndex++;
-    }
-    while (i < n1) {
-        arr[mergedIndex] = leftArr[i];
-        idx[mergedIndex] = leftArr1[i];
-        i++;
-        mergedIndex++;
-    }
-    while (j < n2) {
-        arr[mergedIndex] = rightArr[j];
-        idx[mergedIndex] = rightArr1[j];
-        j++;
-        mergedIndex++;
-    }
-    delete[] leftArr;
-    delete[] rightArr;
-    delete[] leftArr1;
-    delete[] rightArr1;
-}
-void mergeSort(double array[], int idx [],int const begin, int const end)
-{
-    if (begin >= end)
-        return;
-    int mid = begin + (end - begin) / 2;
-    mergeSort(array, idx ,begin, mid);
-    mergeSort(array, idx ,mid + 1, end);
-    merge(array, idx,begin, mid, end);
-}
-
 Dataset kNN::predict(const Dataset& X_test) {
-    int size = X_train.getData()->length();
-//    if (k > size) throw std::out_of_range("get(): Out of range");
-    auto *cmp = new double [size];
-    int * Ind = new int [size];
     auto t_data = new DLL<DLL<int>*>;
     DLL<DLL<int>*>::Iterator t_beg = X_test.getData()->begin();
     DLL<DLL<int>*>::Iterator t_end = X_test.getData()->end();
     for (; t_beg!=t_end; t_beg++) {
         DLL<DLL<int>*>::Iterator beg = X_train.getData()->begin();
-        DLL<DLL<int>*>::Iterator end = X_train.getData()->end();// Tim label cho tung phan tu trong test
-        int cnt = 0;
-        for (; beg!=end; beg++, cnt++){                        //Chay tung hang, tinh khoang cach voi 1 phan tu cua test.
-            //TUng cot cua 1 ptu trong test
+        DLL<DLL<int>*>::Iterator end = X_train.getData()->end();
+        DLL<double> cmp;
+        for (; beg!=end; beg++) {
             DLL<int>::Iterator t_bn = (*t_beg)->begin();
             DLL<int>::Iterator t_en = (*t_beg)->end();
-            //Tung cot cua 1 ptu trong train
             DLL<int>::Iterator tr_bn = (*beg)->begin();
             DLL<int>::Iterator tr_en = (*beg)->end();
             double pred = 0;
             for (;tr_bn!=tr_en; tr_bn++,t_bn++) {
                 pred += pow(((*tr_bn)-(*t_bn)),2);
             }
-            pred = sqrt(pred);
-            cmp[cnt] = pred;
-            Ind[cnt] = cnt;
+            cmp.push_back(sqrt(pred));
         }
-        mergeSort(cmp, Ind, 0,size-1);
-        int arr[10]{0};
+        int arr[10] = {0};
+        double prev_min = 0;
         for (int i = 0; i < k; i ++) {
-            int label = y_train.getData()->get(Ind[i])->get(0);
+            DLL<double>::Iterator it_b = cmp.begin();
+            int ind = 0;
+            double min = 9999999;
+            DLL<double>::Iterator it_e = cmp.end();
+            for (; it_b != it_e; it_b++) {
+                if (i == 0) {
+                    if (*it_b < min)
+                    {
+                        min = *it_b;
+                        ind = it_b.getIndex();
+                    }
+                }
+                else {
+                    if ((*it_b > prev_min ) && (*it_b < min)) {
+                        min = *it_b;
+                        ind = it_b.getIndex();
+                    }
+                }
+            }
+            int label = y_train.getData()->get(ind)->get(0);
             ++arr[label];
+            prev_min = min;
         }
         double max = 0;
         int ind_r = 0;
-        for (int j = 0; j < 10;j ++) {
-            if (arr[j]> max)
+        for (int j = 0; j <= 9;j++) {
+            if (arr[j] > max)
             {
                 max= arr[j];
                 ind_r = j;
@@ -692,11 +683,8 @@ Dataset kNN::predict(const Dataset& X_test) {
     auto * tmp = new DLL<string>;
     tmp->push_back("label");
     Dataset y_pred (t_data,tmp,t_data->length(),1);
-    delete[] cmp;
-    delete[] Ind;
     return y_pred;
 }
-
 double kNN::score(const Dataset& y_test, const Dataset& y_pred) {
     DLL<DLL<int>*>::Iterator it1 = y_pred.getData()->begin();
     DLL<DLL<int>*>::Iterator it2 = y_test.getData()->begin();
@@ -705,7 +693,8 @@ double kNN::score(const Dataset& y_test, const Dataset& y_pred) {
     y_test.getShape(row,col);
     int count = 0;
     for (;it1!=it1_e; it1++,it2++) {
-        if ((*it1)->get(0)  == (*it2)->get(0)) count++; // Neu y_ test hoac y_pred = 0 thi se throw
+
+        if ((*it1)->get(0)  == (*it2)->get(0)) count++;
     }
     double a = static_cast<double>(count)/row;
     return a;
@@ -716,18 +705,9 @@ void train_test_split(Dataset& X, Dataset& y, double test_size,
     int row, col;
     X.getShape(row, col);
     int testsize = (1-test_size)*row;
-    if (testsize == 0) {
-        X_test = (X.extract(testsize,-1,0,-1));
-        y_test = y.extract(testsize,-1,0,-1);
-    }
-    else if (testsize == row-1) {
-        X_train = X.extract(0,-1,0,-1);
-        y_train = y.extract(0,-1,0,-1);
-    }
-    else {
-        X_train = X.extract(0, testsize - 1, 0, -1);
-        X_test = (X.extract(testsize, -1, 0, -1));
-        y_train = y.extract(0, testsize - 1, 0, -1);
-        y_test = y.extract(testsize, -1, 0, -1);
-    }
+    X_train = X.extract(0,testsize-1,0,-1);
+    X_test = (X.extract(testsize,-1,0,-1));
+    y_train = y.extract(0,testsize-1,0,-1);
+    y_test = y.extract(testsize,-1,0,-1);
+
 }
