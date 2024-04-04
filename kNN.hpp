@@ -30,10 +30,11 @@ public:
     virtual void print() const = 0;
     virtual void reverse() = 0;
     virtual void fprint (const char * s) = 0; // be added
+    virtual void rprint () = 0;
     virtual Node <T> * returnHead () = 0;
     virtual Node <T> * returnTail () = 0;
     virtual void setValue (int ind, const T& value) = 0;
-    virtual bool empty () = 0;
+//    virtual void swap (int sm_index, int gr_index);
 };
 template <typename T>
 class DLL : public List<T> {
@@ -47,10 +48,7 @@ public:
     DLL();
     ~DLL();
     void setValue (int ind, const T& value);
-    bool empty () {
-        if (this->head == nullptr) return true;
-        return false;
-    }
+
     void push_back(T value) ;
     void push_front(T value) ;
     void insert(int index, T value) ;
@@ -61,6 +59,7 @@ public:
     void print() const;
     void reverse() ;
     void fprint (const char * s) ; // be added
+    void rprint () ;
     Node <T> * returnHead ();
     Node <T> * returnTail ();
     void swap (int sm_index, int gr_index);
@@ -82,17 +81,16 @@ public:
         Iterator ( DLL<T> * pList, bool begin);
         Iterator &operator=(const Iterator &iterator);
         int getIndex () const;
-//        Iterator operator-- (int);
-//        Iterator operator-- ();
-        const Iterator operator++ (int);
+        Iterator operator-- (int);
+        Iterator operator-- ();
+        Iterator operator++ (int);
         Iterator operator++ ();
         void remove ();
-//        bool operator < (const Iterator & iterator);
+        bool operator < (const Iterator & iterator);
         bool operator != (const Iterator & iterator);
         T &operator*();
         void set (const T &e);
     };
-
 };
 class Dataset {
 private:
@@ -134,7 +132,4 @@ public:
 void train_test_split(Dataset& X, Dataset& y, double test_size,
                       Dataset& X_train, Dataset& X_test, Dataset& y_train, Dataset& y_test);
 
-void merge(double arr[], int idx [],int start, int middle, int end);
-void mergeSort(double array[], int idx [],int const begin, int const end);
 // Please add more or modify as needed
-
